@@ -29,10 +29,6 @@ class OCRProcessingError(OCRError):
     """OCR ran but failed to produce text."""
 
 
-class QRDecodeError(BankReceiptParserError):
-    """QR code decoding failed."""
-
-
 class IssuerDetectionError(BankReceiptParserError):
     """Could not determine receipt issuer."""
 

@@ -1,14 +1,31 @@
-"""Minimal example: OCR and stub parsing entry points."""
+"""Minimal example using the public parse API."""
 
-from bankreceipt_parser import ParseResult, __version__, extract_text, parse_receipt_text
+from __future__ import annotations
+
+import sys
+
+from bankreceipt_parser import __version__, parse
 
 
 def main() -> None:
-    print(f"bankreceipt-parser {__version__}")
-    print("OCR: extract_text(path_or_bytes) — see README")
-    result: ParseResult = parse_receipt_text("sample text placeholder")
-    print(result.model_dump())
-    _ = extract_text  # public API
+    if len(sys.argv) < 2:
+        print(f"bankreceipt-parser {__version__}")
+        print("Usage: python examples/basic.py <receipt-image.png>")
+        sys.exit(1)
+
+    result = parse(sys.argv[1])
+    if result.receipt is None:
+        for warning in result.warnings:
+            print(warning)
+        sys.exit(2)
+
+    receipt = result.receipt
+    print(f"issuer={receipt.issuer} ({receipt.issuer_display_name})")
+    print(f"amount={receipt.amount} {receipt.currency}")
+    if receipt.sender:
+        print(f"sender={receipt.sender.name}")
+    if receipt.recipient:
+        print(f"recipient={receipt.recipient.name}")
 
 
 if __name__ == "__main__":

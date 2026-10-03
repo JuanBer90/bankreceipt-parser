@@ -75,11 +75,9 @@ class SudamerisReceiptParser:
         self,
         text: str,
         *,
-        qr_data: str | None = None,
         country_code: str | None = "py",
         ocr: OCRResult | None = None,
     ) -> BankTransferReceipt:
-        _ = qr_data
         base = ocr or OCRResult(text=text, elements=[], image_width=1, image_height=1)
         if not base.text:
             base = base.model_copy(update={"text": text})

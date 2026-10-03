@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+
 import bankreceipt_parser
 from bankreceipt_parser import (
     BankTransferReceipt,
@@ -12,8 +15,11 @@ from bankreceipt_parser import (
 from bankreceipt_parser.models.identifier import TransactionIdentifier, TransactionIdentifierKind
 
 
-def test_version() -> None:
-    assert bankreceipt_parser.__version__ == "0.1.0"
+def test_version_matches_pyproject() -> None:
+    pyproject = tomllib.loads(
+        (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    assert bankreceipt_parser.__version__ == pyproject["project"]["version"]
 
 
 def test_public_import_path() -> None:

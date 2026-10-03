@@ -18,7 +18,6 @@ class ReceiptParser(Protocol):
         self,
         text: str,
         *,
-        qr_data: str | None = None,
         country_code: str | None = None,
     ) -> BankTransferReceipt:
         """Parse normalized fields from raw text."""

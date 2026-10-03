@@ -47,7 +47,6 @@ class BankTransferReceipt(BaseModel):
     )
     concept: str | None = Field(default=None, description="Transfer description or concept.")
     payment_network: str | None = None
-    qr_data: str | None = Field(default=None, description="Raw payload from QR when decoded.")
     country_code: str | None = Field(
         default=None,
         description="ISO 3166-1 alpha-2 country for the parser jurisdiction.",

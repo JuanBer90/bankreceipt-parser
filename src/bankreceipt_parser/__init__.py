@@ -1,7 +1,6 @@
 """Parse and normalize bank transfer receipts."""
 
-__version__ = "0.1.0"
-
+from bankreceipt_parser._version import __version__
 from bankreceipt_parser.api import (
     extract_ocr,
     extract_text,
@@ -18,7 +17,6 @@ from bankreceipt_parser.exceptions import (
     OCRProcessingError,
     OCRUnavailableError,
     ParseError,
-    QRDecodeError,
     UnsupportedImageError,
 )
 from bankreceipt_parser.models import (
@@ -56,7 +54,6 @@ __all__ = [
     "ParseError",
     "ParseResult",
     "Party",
-    "QRDecodeError",
     "ReceiptParser",
     "StructuredReceiptParser",
     "TesseractOCREngine",

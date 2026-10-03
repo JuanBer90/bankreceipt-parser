@@ -1,4 +1,4 @@
-"""Issuer detection from OCR text and optional QR payload."""
+"""Issuer detection from OCR text and optional receipt image."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from bankreceipt_parser.ocr.structure import OCRResult
 def detect_issuer(
     *,
     text: str | None = None,
-    qr_data: str | None = None,
     ocr: OCRResult | None = None,
     image: ImageSource | Image.Image | None = None,
 ) -> IssuerDetectionOutcome:
@@ -33,19 +32,17 @@ def detect_issuer(
     else:
         structured = OCRResult(text=text or "", elements=[], image_width=1, image_height=1)
     outcome = detect_issuer_from_ocr(structured, image=image)
-    _ = qr_data
     return outcome
 
 
 def detect_issuer_key(
     *,
     text: str,
-    qr_data: str | None = None,
     ocr: OCRResult | None = None,
     image: ImageSource | Image.Image | None = None,
 ) -> str | None:
     """Backward-compatible helper returning an issuer key when identified."""
-    outcome = detect_issuer(text=text, qr_data=qr_data, ocr=ocr, image=image)
+    outcome = detect_issuer(text=text, ocr=ocr, image=image)
     if outcome.status == DetectionStatus.UNKNOWN:
         return None
     return outcome.issuer

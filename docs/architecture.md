@@ -1,6 +1,6 @@
 # Architecture
 
-Developer-oriented notes on how **bankreceipt-parser** is structured today, based on the UENO, BNF, and Itaú implementations. This document describes existing behavior—not a roadmap for new frameworks.
+Developer-oriented notes on how **bankreceipt-parser** is structured today across Paraguay (`py`) issuers registered in `parsers/registry.py`. This document describes existing behavior—not a roadmap for new frameworks.
 
 ## Pipeline overview
 
@@ -99,10 +99,6 @@ The API also duck-checks that the registry parser exposes callable `parse_ocr` a
 - Same parsing and normalization rules as `parse()` once detection is `identified`.
 
 `parse_text()` on a concrete parser builds a minimal `OCRResult` and delegates to `parse_ocr()`; that does not by itself provide rich layout unless the caller supplied structured `ocr`.
-
-### `qr_data`
-
-The `qr_data` parameter on `parse_receipt_text()` / `detect_issuer()` is **not** wired into detection today; do not assume QR-based issuer identification from the public API.
 
 ## Further reading
 

@@ -1,120 +1,186 @@
 # bankreceipt-parser
 
-Open-source Python library to **parse and normalize bank transfer receipts** into structured data.
+Open-source Python library to **parse and normalize bank transfer receipt images** into structured, typed data. Processing is **local and deterministic**: OCR runs on your machine with [Tesseract](https://github.com/tesseract-ocr/tesseract). No cloud APIs and no generative AI.
 
-Initial development targets **Paraguay** (`parsers/py/`), but the layout is **country-extensible** (e.g. future `ar`, `br`, `cl` packages). No generative AI or external AI APIs are required; OCR is intended to run **locally** on your machine.
+**Scope:** Paraguay transfer comprobantes (`country_code` `py` in parsers). The package layout is country-extensible, but **0.1.0** ships parsers and detection for Paraguayan issuers only.
 
-> **Status:** Early bootstrap. **UENO, BNF, Itaú, and GNB** transfer receipts can be parsed end-to-end via `parse()` when issuer detection and the parser registry match. Other issuer directories may remain stubs.
+**Status:** Alpha (`0.1.0`). Behavior and field coverage may change between minor releases while the API stabilizes.
 
-## Scope
+## What it does
 
-This library focuses on **extraction and normalization** of receipt data only. It does not provide databases, duplicate/fraud detection, web APIs, or persistence.
+1. Load a receipt image (PNG, JPEG, or WEBP).
+2. Preprocess and run Tesseract OCR (primary pass plus a supplemental pass merged into structured `OCRResult`).
+3. Detect issuer and receipt layout variant.
+4. Parse with a bank-specific parser when registered.
+5. Return a `ParseResult` with an optional `BankTransferReceipt`, warnings, and optional diagnostics.
 
-## OCR (local)
-
-Extract plain text from receipt images with **`extract_text`** — no bank field parsing yet:
-
-```python
-from bankreceipt_parser import extract_ocr, extract_text
-
-text = extract_text("receipt.jpg")  # str | pathlib.Path | bytes (PNG/JPEG/WEBP)
-structured = extract_ocr("receipt.jpg")  # text + normalized bounding boxes
-
-result = parse("receipt.jpg")  # OCR + detection + registered parser when matched
-# result.receipt.transaction_identifiers, .sender, .recipient, ...
-```
-
-- OCR runs **entirely on your machine**; images and OCR output are **not** sent to any external service.
-- Supported inputs: **PNG, JPEG, WEBP** (not PDF yet).
-- **UENO, BNF, Itaú, and GNB** are implemented for `parse(...)` when detection identifies the issuer and a parser is registered. Other issuers may be detected but not yet parsed.
-
-### System dependency: Tesseract
-
-OCR uses [Tesseract](https://github.com/tesseract-ocr/tesseract) via `pytesseract`. **Installing `pytesseract` does not install the Tesseract binary.** Install Tesseract separately for your OS.
-
-- **Spanish (`spa`) language data** is strongly recommended for Paraguayan receipts. When both `spa` and `eng` are installed, OCR uses `spa+eng`. If `spa` is missing, the library falls back to `eng` with a warning.
-- Unit tests mock Tesseract and do **not** require the binary in CI. An optional integration test runs locally when Tesseract is installed.
-
-### Local OCR evaluation (private datasets)
-
-Use the development script on a **gitignored** directory you provide (never commit real receipts):
-
-```bash
-python scripts/evaluate_ocr.py comprobantes/
-python scripts/evaluate_issuer_signals.py comprobantes/
-```
-
-The script prints aggregate metrics and privacy-safe per-file stats only (no OCR text, no disk writes of extracted content).
-
-Receipt folders label the **product/interface that generated the receipt** (`issuer`), not necessarily a bank identity. Normalized models will keep `issuer` separate from fields such as `sender.bank` or `payment_network`.
+The library **extracts and normalizes** what appears on the receipt. It does not provide fraud checks, duplicate detection, databases, or web services.
 
 ## Requirements
 
-- Python **3.12.x** (project pins `>=3.12,<3.13`)
-- [asdf](https://asdf-vm.com/) (recommended for Python version management)
+- **Python 3.12.x** (`requires-python >=3.12,<3.13`)
+- **Tesseract OCR** installed on the system (`pytesseract` is only a Python binding)
 
-## Development setup
+Spanish (`spa`) language data is strongly recommended for Paraguayan receipts. When both `spa` and `eng` are available, OCR uses `spa+eng`; otherwise the library falls back to `eng` and may add a warning.
 
-1. Install the asdf Python plugin if needed:
+## Install
 
-   ```bash
-   asdf plugin add python https://github.com/asdf-community/asdf-python.git
-   ```
-
-2. Install and select Python 3.12.13 (this repo includes `.python-version`):
-
-   ```bash
-   asdf install python 3.12.13
-   cd bankreceipt-parser
-   asdf local python 3.12.13   # or rely on .python-version
-   ```
-
-3. Create a virtual environment and install in editable mode with dev tools:
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   python -m pip install -U pip
-   python -m pip install -e ".[dev]"
-   ```
-
-4. Run checks:
-
-   ```bash
-   ruff check .
-   mypy
-   pytest --cov=bankreceipt_parser
-   ```
-
-## Developer documentation
-
-- [Architecture and OCR/parser contracts](docs/architecture.md)
-- [Adding a new issuer](docs/adding-an-issuer.md)
-
-## Architecture
-
-Receipt processing is split so **OCR stays separate from parsing**:
-
-```text
-image
-  ├──> preprocessing -> OCR -> raw text
-  └──> QR decoder
-                     ↓
-             issuer detection
-                     ↓
-            bank-specific parser
-                     ↓
-          normalized BankTransferReceipt
+```bash
+pip install bankreceipt-parser
 ```
 
-- **`OCREngine` / `StructuredOCREngine`**: OCR backends; default `parse()` uses structured OCR (`OCRResult` with text and bounding boxes).
-- **Registered parsers**: implement `StructuredReceiptParser` (`parse_ocr`, `resolve_variant`) over `OCRResult`, not raw images. See [docs/architecture.md](docs/architecture.md).
-- **`BankTransferReceipt`**: normalized domain model.
-- **`ParseResult`**: wraps the receipt plus metadata (`raw_ocr_text`, `warnings`).
+Development (from a clone):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e ".[dev]"
+```
+
+## Tesseract setup
+
+Install the Tesseract **binary** for your OS (not included in the wheel).
+
+**macOS (Homebrew):**
+
+```bash
+brew install tesseract tesseract-lang
+```
+
+**Debian/Ubuntu:**
+
+```bash
+sudo apt-get update
+sudo apt-get install tesseract-ocr tesseract-ocr-spa
+```
+
+Verify:
+
+```bash
+tesseract --version
+```
+
+## Quick start
+
+```python
+from bankreceipt_parser import parse
+
+result = parse("path/to/comprobante.png")
+
+if result.receipt is None:
+    print("Could not parse:", result.warnings)
+else:
+    r = result.receipt
+    print(r.issuer, r.issuer_display_name)
+    print(r.amount, r.currency)
+    print(r.sender)
+    print(r.recipient)
+```
+
+Use `include_raw_ocr=True` or `include_diagnostics=True` only when debugging; `raw_ocr_text` is omitted from default serialization.
+
+## Supported issuers (Paraguay)
+
+Each row is the stable **`issuer` slug** returned on `BankTransferReceipt`. Display names come from issuer metadata (`issuer_display_name`), not from OCR.
+
+| Slug | Display name |
+|------|----------------|
+| `ueno` | UENO BANK S.A. |
+| `bnf` | BANCO NACIONAL DE FOMENTO |
+| `itau` | BANCO ITAU PARAGUAY S.A. |
+| `gnb` | BANCO GNB PARAGUAY S.A.E.C.A. |
+| `atlas` | BANCO ATLAS S.A. |
+| `continental` | BANCO CONTINENTAL S.A.E.C.A. |
+| `comecipar` | COOP COOMECIPAR LTDA |
+| `bancop` | BANCOP S.A. |
+| `basa` | BANCO BASA S.A.E.C.A. |
+| `eclub` | eCLUB |
+| `eko` | EKO |
+| `familiar` | BANCO FAMILIAR S.A.E.C.A. |
+| `mango` | MANGO |
+| `interfisa` | INTERFISA BANCO S.A.E.C.A. |
+| `financiera_pyj` | FINANCIERA PARAGUAYO JAPONESA S.A.E.C.A. |
+| `medalla_milagrosa` | COOPERATIVA MEDALLA MILAGROSA LTDA. |
+| `sudameris` | SUDAMERIS BANK S.A.E.C.A. |
+| `vaquita` | VAQUITA |
+| `zeta` | ZETA BANCO S.A.E.C.A. |
+
+Some issuers expose multiple layout **variants** (selected during detection). Field coverage depends on the variant and OCR quality.
+
+## Public API
+
+Symbols exported from `bankreceipt_parser` (see `__all__` in the package):
+
+| Symbol | Role |
+|--------|------|
+| `parse` | Main entry: image path or bytes → `ParseResult` |
+| `parse_receipt_image` | Alias of `parse` |
+| `parse_receipt_text` | Parse pre-extracted text / optional `OCRResult` without running OCR on an image |
+| `extract_text` | OCR only → normalized `str` |
+| `extract_ocr` | OCR only → `OCRResult` |
+| `ParseResult` | `receipt`, `warnings`, optional `raw_ocr_text`, optional `diagnostics` |
+| `BankTransferReceipt` | Normalized receipt model |
+| `Party`, `BankParty` | Sender/recipient (and optional bank-level party) |
+| `TransactionIdentifier`, `TransactionIdentifierKind` | Ticket/operation/reference IDs when extracted |
+| `TransferStatus`, `AccountType` | Enums for status and account type |
+| `IssuerDetectionOutcome`, `DetectionStatus` | Exposed for diagnostics (`include_diagnostics=True`) |
+| `TesseractOCREngine`, `OCREngine`, `NotImplementedOCREngine` | OCR backends |
+| `OCRResult`, `OCRTextElement`, `NormalizedBoundingBox` | Structured OCR types |
+| `StructuredReceiptParser`, `ReceiptParser`, `GenericReceiptParser` | Parser protocols / stub for extensions |
+| Exception types | `ParseError`, `OCRError`, `OCRUnavailableError`, etc. |
+
+Issuer slugs and metadata: `from bankreceipt_parser.models import Issuer, IssuerMetadata, metadata_for`.
+
+### `ParseResult` and warnings
+
+- **`receipt`:** `BankTransferReceipt` on success, otherwise `None`.
+- **`warnings`:** Non-fatal messages (OCR language fallback, unknown issuer, parse failure, missing parser, etc.).
+- Detection outcome is **not** downgraded when parsing fails; check `receipt` and warnings together.
+
+### Unknown issuer or format
+
+If detection cannot identify the issuer/format with sufficient confidence, `parse()` returns `receipt=None` and a warning such as *Issuer/format could not be determined; receipt parsing skipped.* This is not raised as an exception.
+
+### `issuer` vs party banks
+
+- **`issuer`:** Product or institution that **issued the receipt UI** (stable slug, e.g. `ueno`).
+- **`issuer_display_name`:** Canonical name from library metadata for that slug (computed field).
+- **`sender.bank` / `recipient.bank`:** Counterparty banks **as printed on the receipt**, after conservative normalization. They may differ from `issuer` (e.g. transfer to another bank).
+
+### Transaction identifiers
+
+`transaction_identifiers` lists structured IDs (comprobante, operation, reference, etc.) when the parser extracts them. Kinds are described by `TransactionIdentifierKind`.
+
+### Image formats
+
+**PNG, JPEG, WEBP** via path or bytes. **PDF is not supported** in 0.1.0.
+
+## Limitations
+
+- Output quality depends on OCR and photo quality.
+- Not every field is present on every layout variant.
+- No PDF input, no batch service, no ML-based repair.
+- Unit tests mock Tesseract; CI does not require the binary. Optional integration tests may use a local Tesseract install and private images (not shipped with the package).
 
 ## Privacy
 
-Do **not** commit real bank receipt images or personal financial data. Use synthetic fixtures with invented data under `tests/fixtures/`. `.gitignore` excludes common private fixture paths.
+Images and OCR text are processed **locally**. Do not commit real comprobantes or personal financial data to the repository. Use synthetic fixtures in tests.
+
+## Development
+
+```bash
+ruff check .
+mypy
+pytest tests/
+```
+
+Developer docs:
+
+- [Architecture](docs/architecture.md)
+- [Adding an issuer](docs/adding-an-issuer.md)
+
+Optional local scripts (not installed with the package): `scripts/evaluate_ocr.py`, `scripts/evaluate_issuer_signals.py` against a **private** image directory.
 
 ## License
 

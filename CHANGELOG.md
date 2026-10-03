@@ -7,20 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - Unreleased
 
-### Fixed
-
-- **`parse()` / `parse_receipt_text()` handle expected `ParseError`:** Registered bank parsers no longer abort the public API when parsing fails (e.g. unsupported or uninferable receipt variant). Detection stays **`identified`**; the failure is represented with **`receipt=None`** and a **`receipt parsing failed`** warning, matching the documented separation of detection and parsing.
-
-### Changed
-
-- **`DetectionStatus` is identification-only:** `unknown` (not identified with sufficient confidence) and `identified` (issuer and/or format variant identified). Removed `unsupported` and `supported`, which mixed detection with parser availability.
-- **`IssuerDetectionOutcome` is unchanged by parsing:** `parse()` / `parse_receipt_text()` diagnostics use the same detection outcome as `detect_issuer()`; whether parsing succeeded is indicated by `ParseResult.receipt`, optional `ParseDiagnostics.parser_variant`, and warnings—not by mutating `detection.status`.
+First public release.
 
 ### Added
 
-- **GNB issuer (`gnb`):** Detection for `transfer_success` and `spi_movement_detail` (institutional reference `BGNBPYP…` plus SPI transfer context); registered `GnbReceiptParser` with lines-first field extraction.
-- **`payment_network_from_text`:** Recognize **SPI** in addition to SIP.
-- **`StructuredReceiptParser` protocol:** Public typing contract for registry parsers (`parse_text`, `resolve_variant`, `parse_ocr`) used by `parse()` after OCR; `ReceiptParser` remains text-first for stubs.
-- Initial project structure and packaging.
-- Domain model skeletons for normalized bank transfer receipts.
-- OCR abstraction, issuer detection, and country-specific parser layout (Paraguay `py` namespace planned).
+- Local, deterministic pipeline: image preprocessing, Tesseract OCR (structured `OCRResult` with supplemental merge), issuer/format detection, and bank-specific parsing into `BankTransferReceipt`.
+- Paraguay parsers and detection for 19 issuers: `ueno`, `bnf`, `itau`, `gnb`, `atlas`, `continental`, `comecipar`, `bancop`, `basa`, `eclub`, `eko`, `familiar`, `mango`, `interfisa`, `financiera_pyj`, `medalla_milagrosa`, `sudameris`, `vaquita`, `zeta`.
+- Public API: `parse`, `parse_receipt_image`, `parse_receipt_text`, `extract_text`, `extract_ocr`.
+- Typed models: `ParseResult`, `BankTransferReceipt`, `Party`, `TransactionIdentifier`, enums for status and account type; `issuer_display_name` from issuer metadata.
+- Conservative bank-name normalization for extracted `sender.bank` / `recipient.bank` at the API boundary.
+- Warnings for unknown issuer/format, missing parser, and parse failures without changing detection status.
+- Optional `include_raw_ocr` and `include_diagnostics` on parse entry points.
+
+### Notes
+
+- Requires Python 3.12.x and a system Tesseract installation (Spanish language data recommended).

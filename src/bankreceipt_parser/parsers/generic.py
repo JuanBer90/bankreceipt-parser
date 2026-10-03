@@ -15,8 +15,7 @@ class GenericReceiptParser:
         self,
         text: str,
         *,
-        qr_data: str | None = None,
         country_code: str | None = None,
     ) -> BankTransferReceipt:
-        _ = (text, qr_data)
+        _ = text
         raise ParseError("Generic parsing is not implemented.")

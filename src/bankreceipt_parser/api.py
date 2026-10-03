@@ -170,7 +170,6 @@ def parse_receipt_image(
 def parse_receipt_text(
     text: str,
     *,
-    qr_data: str | None = None,
     country_code: str | None = None,
     ocr: OCRResult | None = None,
     include_raw_ocr: bool = False,
@@ -181,7 +180,7 @@ def parse_receipt_text(
 
     Parsed party bank names are canonicalized in this entry point (not in bank parsers).
     """
-    detection = detect_issuer(text=text, qr_data=qr_data, ocr=ocr)
+    detection = detect_issuer(text=text, ocr=ocr)
     warnings: list[str] = []
     if detection.status == DetectionStatus.UNKNOWN:
         warnings.append("Issuer/format could not be determined; receipt parsing skipped.")
