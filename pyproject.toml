@@ -35,6 +35,12 @@ dev = [
     "mypy",
 ]
 
+[project.urls]
+Homepage = "https://github.com/JuanBer90/bankreceipt-parser"
+Repository = "https://github.com/JuanBer90/bankreceipt-parser"
+Issues = "https://github.com/JuanBer90/bankreceipt-parser/issues"
+Changelog = "https://github.com/JuanBer90/bankreceipt-parser/blob/main/CHANGELOG.md"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/bankreceipt_parser"]
 exclude = [
