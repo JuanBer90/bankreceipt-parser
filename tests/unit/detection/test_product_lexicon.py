@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from bankreceipt_parser.detection.signals.product_lexicon import (
     ISSUER_PRODUCT_SIGNALS,
+    _normalized_term_matches_text,
     score_text_signals,
 )
 from bankreceipt_parser.models.issuer import Issuer
 from bankreceipt_parser.ocr.structure import OCRResult
+from bankreceipt_parser.parsers.common.lines import normalize_label
 
 
 def test_issuer_product_signals_covers_all_issuers() -> None:
@@ -46,3 +48,13 @@ def test_single_token_zeta_does_not_match_substring() -> None:
 def test_single_token_zeta_matches_when_delimited() -> None:
     hits = score_text_signals(_ocr("zeta banco comprobante"))
     assert any(hit.issuer_key == Issuer.ZETA.value for hit in hits)
+
+
+def test_zetabonco_lexicon_term_matches_institutional_token() -> None:
+    """OCR-glued brand variant is a whole token (word boundaries), not a zeta substring."""
+    text = normalize_label("@ zetabonco comprobante")
+    assert _normalized_term_matches_text("zeta", text) is False
+    assert _normalized_term_matches_text("zetabonco", text) is True
+    hits = score_text_signals(_ocr("@ zetabonco comprobante transferencia"))
+    zeta_hits = [h for h in hits if h.issuer_key == Issuer.ZETA.value]
+    assert any(h.matched_term == "zetabonco" for h in zeta_hits)

@@ -26,7 +26,7 @@ ISSUER_PRODUCT_SIGNALS: dict[Issuer, tuple[str, ...]] = {
     Issuer.MANGO: ("mango", "mango pay", "mango wallet"),
     Issuer.EKO: ("eko", "eko wallet"),
     Issuer.VAQUITA: ("vaquita",),
-    Issuer.ZETA: ("zeta", "zetabanco"),
+    Issuer.ZETA: ("zeta", "zetabanco", "zetabonco"),
     Issuer.BANCOP: ("bancop",),
     Issuer.BASA: ("basa",),
     Issuer.SUDAMERIS: ("sudameris",),
