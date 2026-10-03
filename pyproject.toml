@@ -1,0 +1,108 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bankreceipt-parser"
+version = "0.1.0"
+description = "Parse and normalize bank transfer receipts into structured data."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12,<3.13"
+authors = [{ name = "bankreceipt-parser contributors" }]
+keywords = ["bank", "receipt", "ocr", "parser", "transfer"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2",
+    "Pillow",
+    "pytesseract",
+    "opencv-python-headless",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://github.com/placeholder-org/bankreceipt-parser"
+Documentation = "https://github.com/placeholder-org/bankreceipt-parser#readme"
+Repository = "https://github.com/placeholder-org/bankreceipt-parser"
+Issues = "https://github.com/placeholder-org/bankreceipt-parser/issues"
+Changelog = "https://github.com/placeholder-org/bankreceipt-parser/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bankreceipt_parser"]
+exclude = [
+    "/comprobantes",
+    "/comprobantes/**",
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/bankreceipt_parser" = "bankreceipt_parser"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/examples",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
+exclude = [
+    "/comprobantes",
+    "/comprobantes/**",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = ["--strict-markers", "--strict-config"]
+markers = [
+    "integration: tests that require optional system dependencies",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["bankreceipt_parser"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+warn_unused_configs = true
+mypy_path = "src"
+packages = ["bankreceipt_parser"]
+namespace_packages = false
+
+[[tool.mypy.overrides]]
+module = ["cv2", "pytesseract", "PIL.Image"]
+ignore_missing_imports = true

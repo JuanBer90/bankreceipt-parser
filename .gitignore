@@ -1,0 +1,52 @@
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+pip-wheel-metadata/
+
+# Testing / quality tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local / private receipt fixtures (do not commit real financial data)
+tests/fixtures/real_receipts/
+tests/fixtures/private/
+**/real_receipts/**
+**/*_private.*
+comprobantes/
+
+.cursor/
